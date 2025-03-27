@@ -1,0 +1,51 @@
+services:
+  mongodb:
+    image: docker.io/mongodb/mongodb-community-server:7.0.3-ubi9
+    container_name: mongo_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    networks:
+      - app-network
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    healthcheck:
+      test: |
+        mongosh --host mongo_db:27017 --quiet --eval '
+          try {
+            var status = rs.status();
+            if (status.ok === 1) quit(0);
+            quit(1);
+          } catch(e) {
+            if (e.codeName === "NotYetInitialized" || e.code === 94 || e.message.includes("no replset config")) {
+              var init = rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "mongo_db:27017" }] });
+              quit(init.ok === 1 ? 0 : 1);
+            }
+            quit(1);
+          }
+        '
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 10
+
+  app:
+    build:
+      context: .
+    container_name: app_server
+    ports:
+      - "6969:6969"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  app-network:
+    driver: bridge

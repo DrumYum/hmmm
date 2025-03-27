@@ -1,0 +1,22 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "express": "^4.21.2",
+    "mongodb": "^6.15.0",
+    "ws": "^8.18.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.13.14",
+    "@types/ws": "^8.18.0",
+    "typescript": "^5.8.2"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/server.js",
+    "dev": "tsc -w & node --watch build/server.js"
+  }
+}
